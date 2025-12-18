@@ -10,7 +10,7 @@
 #include <ArduinoOTA.h>
 
 // CONFIGURATION
-const int CURRENT_VERSION = 1;
+const int CURRENT_VERSION = 4;
 
 // DISPLAY SETTINGS
 const int MAX_HEIGHT = 130;
@@ -26,7 +26,6 @@ GxEPD2_BW<GxEPD2_290_T94_V2, GxEPD2_290_T94_V2::HEIGHT> display(GxEPD2_290_T94_V
 int firmwareVersion = 1;
 const char* fwHost = "raw.githubusercontent.com";
 const int fwPort = 443;
-int latestFetchFirmwareVersion = 0;
 
 WiFiSSLClient wifiClient;
 HttpClient client = HttpClient(wifiClient, fwHost, fwPort);
@@ -82,7 +81,7 @@ void connectWifi() {
 void checkFirmwareUpdate() {
   Serial.println("Checking for firmware update...");
 
-  String versionPath = String("/") + GH_USER + "/" + GH_REPO + "/blob/" + GH_BRANCH + "/firmware.txt";
+  String versionPath = String("/") + GH_USER + "/" + GH_REPO + "/" + GH_BRANCH + "/firmware.txt";
 
   HttpClient versionClient = HttpClient(wifiClient, fwHost, fwPort);
   versionClient.get(versionPath);
@@ -100,15 +99,15 @@ void checkFirmwareUpdate() {
   Serial.print("Server firmware version: "); Serial.println(latestFirmwareVersion);
   Serial.print("Current firmware version: "); Serial.println(CURRENT_VERSION);
 
-  if (latestFetchFirmwareVersion <= CURRENT_VERSION) {
+  if ((int)latestFirmwareVersion <= (int)CURRENT_VERSION) {
     Serial.println("Firmware is up to date.");
     return;
   }
 
   Serial.println("New firmware version available. Starting update...");
-  displayMessage("Updating firmware...\n Do not unplug!\n v" + String(latestFetchFirmwareVersion));
+  displayMessage("Updating firmware...\n Do not unplug!\n v" + String(latestFirmwareVersion));
 
-  String binPath = String("/") + GH_USER + "/" + GH_REPO + "/raw/" + GH_BRANCH + "/firmware.bin";
+  String binPath = String("/") + GH_USER + "/" + GH_REPO + "/" + GH_BRANCH + "/firmware.bin";
 
   client.stop();
 
