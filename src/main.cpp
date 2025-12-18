@@ -33,10 +33,12 @@ void setup()
   }
 
   int updateStatus = checkFirmwareUpdate();
+  Serial.println("Firmware check result: " + String(updateStatus));
   // Only check if an update is needed. If it fails or is up to date, continue normal operation.
   if (updateStatus == NEEDS_UPDATE)
   {
     displayMessage("Updating Firmware...");
+    delay(1000);
     int result = updateFirmware();
     if (result == UPDATE_SUCCESSFUL)
     {
