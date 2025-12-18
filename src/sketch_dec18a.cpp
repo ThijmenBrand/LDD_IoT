@@ -55,7 +55,7 @@ void setup() {
 do {
     display.fillScreen(GxEPD_WHITE);
     display.setCursor(10, 30);
-    display.print("Hi Nyuszi!");
+    display.print("This works!!");
   } while (display.nextPage());
 }
 
