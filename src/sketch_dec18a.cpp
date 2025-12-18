@@ -55,7 +55,7 @@ void setup() {
 do {
     display.fillScreen(GxEPD_WHITE);
     display.setCursor(10, 30);
-    display.print("This works!!");
+    display.print("Baby nyuszi\nFirmware v" + String(CURRENT_VERSION) + "\n\nConnected to WiFi!\nIP:\n" + WiFi.localIP().toString());
   } while (display.nextPage());
 }
 
