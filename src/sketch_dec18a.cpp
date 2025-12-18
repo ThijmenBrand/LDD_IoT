@@ -55,7 +55,8 @@ void setup() {
 do {
     display.fillScreen(GxEPD_WHITE);
     display.setCursor(10, 30);
-    display.print("Hello world!");
+    display.print("Hi there!\nWiFi connected.\nIP:\n");
+    display.print(WiFi.localIP());
   } while (display.nextPage());
 }
 
