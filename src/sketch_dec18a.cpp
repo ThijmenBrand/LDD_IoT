@@ -81,7 +81,7 @@ void connectWifi() {
 void checkFirmwareUpdate() {
   Serial.println("Checking for firmware update...");
 
-  String versionPath = String("/") + GH_USER + "/" + GH_REPO + "/" + GH_BRANCH + "/firmware.txt";
+  String versionPath = String("/") + GH_USER + "/" + GH_REPO + "/" + GH_BRANCH + "/firmware.txt?t=" + String(millis());
 
   HttpClient versionClient = HttpClient(wifiClient, fwHost, fwPort);
   versionClient.get(versionPath);
@@ -107,7 +107,7 @@ void checkFirmwareUpdate() {
   Serial.println("New firmware version available. Starting update...");
   displayMessage("Updating firmware...\n Do not unplug!\n v" + String(latestFirmwareVersion));
 
-  String binPath = String("/") + GH_USER + "/" + GH_REPO + "/" + GH_BRANCH + "/firmware.bin";
+  String binPath = String("/") + GH_USER + "/" + GH_REPO + "/" + GH_BRANCH + "/firmware.bin?t=" + String(millis());
 
   client.stop();
 
