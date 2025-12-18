@@ -21,10 +21,6 @@ void setup()
   int percent = getBatteryPercentage();
 
   displayMessage("Battery:\n" + String(volts, 2) + " V\n" + String(percent) + " %");
-  if (percent < 20)
-  {
-    displayMessage("Battery Low!\nPlease Charge.");
-  }
 
   delay(5000);
 
@@ -51,6 +47,8 @@ void setup()
       displayMessage("Update Failed!");
     }
   }
+
+  displayMessage("Device is\nUp to Date!");
 }
 
 void loop()
