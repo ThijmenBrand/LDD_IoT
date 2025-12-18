@@ -2,11 +2,12 @@
 #include <GxEPD2_BW.h>
 #include <Fonts/FreeMonoBold9pt7b.h>
 #include <Fonts/FreeMonoBold12pt7b.h>
-#include <ArduinoOTA.h>
 #include <WiFiNINA.h>
 #include <ArduinoHttpClient.h>
-#include <ArduinoJson.h>
 #include "../lib/secrets.h"
+
+#define NO_GLOBAL_ARDUINOOTA
+#include <ArduinoOTA.h>
 
 // CONFIGURATION
 const int CURRENT_VERSION = 1;
@@ -131,7 +132,7 @@ void updateFirmware(String binaryPath) {
     return;
   }
 
-  if (!InternalStorage.open(contentLength)) {
+  if (!InternalStorage.open((int)contentLength)) {
     Serial.println("Not enough space for firmware update.");
     firmwareClient.stop();
     return;
