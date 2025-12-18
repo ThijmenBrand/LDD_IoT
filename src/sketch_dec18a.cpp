@@ -47,7 +47,7 @@ void setup() {
 
   connectWifi();
 
-  // checkFirmwareUpdate();
+  checkFirmwareUpdate();
 
   // Show connecting message
   display.setFullWindow();
@@ -55,8 +55,7 @@ void setup() {
 do {
     display.fillScreen(GxEPD_WHITE);
     display.setCursor(10, 30);
-    display.print("Hi there!\nWiFi connected.\nIP:\n");
-    display.print(WiFi.localIP());
+    display.print("Hi Nyuszi!");
   } while (display.nextPage());
 }
 
