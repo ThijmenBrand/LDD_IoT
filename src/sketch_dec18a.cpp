@@ -2,14 +2,19 @@
 #include <GxEPD2_BW.h>
 #include <Fonts/FreeMonoBold9pt7b.h>
 #include <Fonts/FreeMonoBold12pt7b.h>
+#include <ArduinoOTA.h>
 #include <WiFiNINA.h>
+#include <ArduinoHttpClient.h>
 #include <ArduinoJson.h>
 #include "../lib/secrets.h"
 
+// CONFIGURATION
+const int CURRENT_VERSION = 1;
+
+// DISPLAY SETTINGS
 const int MAX_HEIGHT = 130;
 const int MAX_WIDHT = 300;
 
-// Define pins for the E-Ink board
 const int EINK_BUSY = 7;
 const int EINK_RST = 6;
 const int EINK_DC = 5;
@@ -17,12 +22,18 @@ const int EINK_CS = 4;
 
 GxEPD2_BW<GxEPD2_290_T94_V2, GxEPD2_290_T94_V2::HEIGHT> display(GxEPD2_290_T94_V2(EINK_CS, EINK_DC, EINK_RST, EINK_BUSY));
 
-// API Settings
-const char* server = "api.coindesk.com";
-WiFiSSLClient client;
+int firmwareVersion = 1;
+const char* fwHost = "raw.githubusercontent.com";
+const int fwPort = 443;
+int latestFetchFirmwareVersion = 0;
 
+WiFiSSLClient wifiClient;
+HttpClient client = HttpClient(wifiClient, fwHost, fwPort);
 
-int counter = 0;
+void connectWifi();
+void checkFirmwareUpdate();
+void updateFirmware(String binaryPath);
+void displayMessage(String message);
 
 void setup() {
   Serial.begin(115200);
@@ -32,6 +43,14 @@ void setup() {
   display.setRotation(1);
   display.setFont(&FreeMonoBold9pt7b);
   display.setTextColor(GxEPD_BLACK);
+
+  displayMessage("Starting up...\nv" + String(CURRENT_VERSION));
+
+  delay(5000);
+
+  connectWifi();
+
+  checkFirmwareUpdate();
 
   // Show connecting message
   display.setFullWindow();
@@ -44,4 +63,105 @@ do {
 }
 
 void loop() {
+
+}
+
+void connectWifi() {
+  if (WiFi.status() == WL_CONNECTED) return;
+
+  Serial.print("Connecting to WiFi");
+  while (WiFi.status() != WL_CONNECTED) {
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+    delay(1000);
+    Serial.print(".");
+  }
+  Serial.println("\nConnected!");
+}
+
+void checkFirmwareUpdate() {
+  Serial.println("Checking for firmware update...");
+
+  String versionPath = String("/") + GH_USER + "/" + GH_REPO + "/blob/" + GH_BRANCH + "/firmware.txt";
+
+  HttpClient versionClient = HttpClient(wifiClient, fwHost, fwPort);
+  versionClient.get(versionPath);
+
+  int statusCode = versionClient.responseStatusCode();
+  if (statusCode != 200) {
+    Serial.print("Failed to fetch firmware version. HTTP Status Code: ");
+    Serial.println(statusCode);
+    versionClient.stop();
+    return;
+  }
+
+  String response = versionClient.responseBody();
+  int latestFirmwareVersion = response.toInt();
+  Serial.print("Server firmware version: "); Serial.println(latestFirmwareVersion);
+  Serial.print("Current firmware version: "); Serial.println(CURRENT_VERSION);
+
+  if (latestFetchFirmwareVersion <= CURRENT_VERSION) {
+    Serial.println("Firmware is up to date.");
+    return;
+  }
+
+  Serial.println("New firmware version available. Starting update...");
+  displayMessage("Updating firmware...\n Do not unplug!\n v" + String(latestFetchFirmwareVersion));
+
+  String binPath = String("/") + GH_USER + "/" + GH_REPO + "/raw/" + GH_BRANCH + "/firmware.bin";
+
+  client.stop();
+
+  updateFirmware(binPath);
+}
+
+void updateFirmware(String binaryPath) {
+  HttpClient firmwareClient = HttpClient(wifiClient, fwHost, fwPort);
+  firmwareClient.get(binaryPath);
+
+  if (firmwareClient.responseStatusCode() != 200) {
+    Serial.println("Failed to download firmware binary.");
+    firmwareClient.stop();
+    return;
+  }
+
+  long contentLength = firmwareClient.contentLength();
+  if (contentLength <= 0) {
+    Serial.println("Invalid content length.");
+    firmwareClient.stop();
+    return;
+  }
+
+  if (!InternalStorage.open(contentLength)) {
+    Serial.println("Not enough space for firmware update.");
+    firmwareClient.stop();
+    return;
+  }
+
+  byte buffer[128];
+  while (client.connected() || client.available()) {
+    if (client.available()) {
+      int bytesRead = client.read(buffer, sizeof(buffer));
+      if (bytesRead > 0) {
+        for (int i = 0; i < bytesRead; i++) {
+          InternalStorage.write(buffer[i]);
+        }
+      }
+    }
+  }
+
+  InternalStorage.close();
+  client.stop();
+
+  Serial.println("Update Downloaded. Rebooting to apply update...");
+  InternalStorage.apply();
+}
+
+void displayMessage(String message) {
+  display.setFullWindow();
+  display.firstPage();
+  do {
+    display.fillScreen(GxEPD_WHITE);
+    display.setCursor(10, 30);
+    display.print(message);
+  } while (display.nextPage());
 }
