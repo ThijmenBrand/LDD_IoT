@@ -4,13 +4,11 @@
 #include <Fonts/FreeMonoBold12pt7b.h>
 #include <WiFiNINA.h>
 #include <ArduinoHttpClient.h>
+#include "../lib/firmware.h"
 #include "../lib/secrets.h"
 
 #define NO_GLOBAL_ARDUINOOTA
 #include <ArduinoOTA.h>
-
-// CONFIGURATION
-const int CURRENT_VERSION = 4;
 
 // DISPLAY SETTINGS
 const int MAX_HEIGHT = 130;
@@ -28,7 +26,6 @@ const char* fwHost = "raw.githubusercontent.com";
 const int fwPort = 443;
 
 WiFiSSLClient wifiClient;
-HttpClient client = HttpClient(wifiClient, fwHost, fwPort);
 
 void connectWifi();
 void checkFirmwareUpdate();
@@ -50,7 +47,7 @@ void setup() {
 
   connectWifi();
 
-  checkFirmwareUpdate();
+  // checkFirmwareUpdate();
 
   // Show connecting message
   display.setFullWindow();
@@ -63,7 +60,14 @@ do {
 }
 
 void loop() {
+ if (Serial.available() > 0) {
+  char command = Serial.read();
 
+  if (command == 'u') {
+      Serial.println("Manual update check triggered.");
+      checkFirmwareUpdate();
+    }
+ }
 }
 
 void connectWifi() {
@@ -109,7 +113,7 @@ void checkFirmwareUpdate() {
 
   String binPath = String("/") + GH_USER + "/" + GH_REPO + "/" + GH_BRANCH + "/firmware.bin?t=" + String(millis());
 
-  client.stop();
+  versionClient.stop();
 
   updateFirmware(binPath);
 }
@@ -138,9 +142,9 @@ void updateFirmware(String binaryPath) {
   }
 
   byte buffer[128];
-  while (client.connected() || client.available()) {
-    if (client.available()) {
-      int bytesRead = client.read(buffer, sizeof(buffer));
+  while (firmwareClient.connected() || firmwareClient.available()) {
+    if (firmwareClient.available()) {
+      int bytesRead = firmwareClient.read(buffer, sizeof(buffer));
       if (bytesRead > 0) {
         for (int i = 0; i < bytesRead; i++) {
           InternalStorage.write(buffer[i]);
@@ -150,7 +154,7 @@ void updateFirmware(String binaryPath) {
   }
 
   InternalStorage.close();
-  client.stop();
+  firmwareClient.stop();
 
   Serial.println("Update Downloaded. Rebooting to apply update...");
   InternalStorage.apply();
