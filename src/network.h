@@ -4,6 +4,16 @@
 #define WIFI_ERROR 1
 #define WIFI_CONNECTED 0
 
+#include <Arduino.h>
+
+struct HttpResponse
+{
+  int statusCode;
+  int contentLength;
+  String body;
+};
+
 int connectWifi();
+HttpResponse httpsGet(const char *host, String path);
 
 #endif // NETWORK_H

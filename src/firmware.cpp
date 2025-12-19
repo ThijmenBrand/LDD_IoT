@@ -18,20 +18,14 @@ int checkFirmwareUpdate()
 
   String versionPath = String("/") + GH_USER + "/" + GH_REPO + "/" + GH_BRANCH + "/firmware.txt?t=" + String(millis());
 
-  HttpClient versionClient = HttpClient(wifiClient, fwHost, fwPort);
-  versionClient.get(versionPath);
-
-  int statusCode = versionClient.responseStatusCode();
-  if (statusCode != 200)
+  HttpResponse response = httpsGet(fwHost, versionPath);
+  if (response.statusCode != 200)
   {
-    Serial.print("Failed to fetch firmware version. HTTP Status Code: ");
-    Serial.println(statusCode);
-    versionClient.stop();
+    Serial.println("Could not fetch firmware version.");
     return COULD_NOT_FETCH_VERSION;
   }
 
-  String response = versionClient.responseBody();
-  int latestFirmwareVersion = response.toInt();
+  int latestFirmwareVersion = response.body.toInt();
   Serial.print("Server firmware version: ");
   Serial.println(latestFirmwareVersion);
   Serial.print("Current firmware version: ");
@@ -44,8 +38,6 @@ int checkFirmwareUpdate()
   }
 
   Serial.println("New firmware version available. Starting update...");
-
-  versionClient.stop();
 
   return NEEDS_UPDATE;
 }

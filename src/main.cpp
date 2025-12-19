@@ -3,10 +3,13 @@
 #include "firmware.h"
 #include "display.h"
 #include "battery.h"
+#include "api.h"
 
 // DISPLAY SETTINGS
 const int MAX_HEIGHT = 130;
 const int MAX_WIDHT = 300;
+
+const String DEVICE_ID = "DEVICE_001";
 
 void setup()
 {
@@ -14,15 +17,7 @@ void setup()
 
   // Initialize the e-paper
   initDisplay(CURRENT_VERSION);
-
   delay(1000);
-
-  float volts = getBatteryVoltage();
-  int percent = getBatteryPercentage();
-
-  displayMessage("Battery:\n" + String(volts, 2) + " V\n" + String(percent) + " %");
-
-  delay(5000);
 
   int WifiStatus = connectWifi();
   if (WifiStatus != WIFI_CONNECTED)
@@ -50,19 +45,18 @@ void setup()
     }
   }
 
-  displayMessage("Device is\nUp to Date!");
+  // Fetch content from API
+  String screenContent = fetchScreenContent(DEVICE_ID);
+  if (screenContent == "")
+  {
+    displayMessage("Failed to fetch\nscreen content!");
+    while (1)
+      ;
+  }
+
+  displayMessage(screenContent);
 }
 
 void loop()
 {
-  if (Serial.available() > 0)
-  {
-    char command = Serial.read();
-
-    if (command == 'u')
-    {
-      Serial.println("Manual update check triggered.");
-      checkFirmwareUpdate();
-    }
-  }
 }

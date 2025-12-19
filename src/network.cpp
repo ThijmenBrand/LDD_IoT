@@ -1,5 +1,6 @@
 #include "network.h"
 #include <WiFiNINA.h>
+#include <ArduinoHttpClient.h>
 #include "../lib/secrets.h"
 
 WiFiSSLClient wifiClient;
@@ -18,4 +19,28 @@ int connectWifi()
   }
   Serial.println("\nConnected!");
   return WIFI_CONNECTED;
+}
+
+HttpResponse httpsGet(const char *host, String path)
+{
+  Serial.print("Requesting: ");
+  Serial.print(host);
+  Serial.println(path);
+
+  HttpClient client = HttpClient(wifiClient, host, 443);
+  client.get(path);
+
+  int statusCode = client.responseStatusCode();
+  if (statusCode != 200)
+  {
+    Serial.print("HTTP Error: ");
+    Serial.println(statusCode);
+    return HttpResponse{statusCode, 0, ""};
+  }
+
+  String body = client.responseBody();
+  int contentLength = body.length();
+
+  client.stop();
+  return HttpResponse{statusCode, contentLength, body};
 }
