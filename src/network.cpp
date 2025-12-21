@@ -2,6 +2,8 @@
 #include <ArduinoHttpClient.h>
 #include "../lib/secrets.h"
 
+WiFiSSLClient wifiClient;
+
 int connectWifi()
 {
   if (WiFi.status() == WL_CONNECTED)

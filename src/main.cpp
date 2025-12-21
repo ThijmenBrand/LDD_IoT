@@ -11,6 +11,7 @@ const int MAX_HEIGHT = 130;
 const int MAX_WIDHT = 300;
 
 const String DEVICE_ID = "DEVICE_001";
+const int UPDATE_INTERVAL_MS = 3600000; // 1 Hour
 
 void setup()
 {
@@ -59,16 +60,21 @@ void setup()
     }
   }
 
-  // Fetch content from API
-  String screenContent = fetchScreenContent(DEVICE_ID);
-  if (screenContent == "")
+  displayMessage("Syncing...");
+  String data = fetchScreenContent(DEVICE_ID);
+  if (data.length() > 0)
   {
-    displayMessage("Failed to fetch\nscreen content!");
-    while (1)
-      ;
+    drawScreen(data, batteryLevel, batteryLevel <= 20);
+  }
+  else
+  {
+    displayMessage("Failed to fetch\ndata!");
   }
 
-  displayMessage(screenContent);
+  Serial.println("Update complete. Sleeping for 1 hour...");
+  WiFi.end();
+  LowPower.deepSleep(UPDATE_INTERVAL_MS);
+  NVIC_SystemReset();
 }
 
 void loop()

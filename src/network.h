@@ -7,7 +7,7 @@
 #include <Arduino.h>
 #include <WiFiNINA.h>
 
-WiFiSSLClient wifiClient;
+extern WiFiSSLClient wifiClient;
 
 struct HttpResponse
 {
