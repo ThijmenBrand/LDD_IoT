@@ -1,9 +1,6 @@
 #include "network.h"
-#include <WiFiNINA.h>
 #include <ArduinoHttpClient.h>
 #include "../lib/secrets.h"
-
-WiFiSSLClient wifiClient;
 
 int connectWifi()
 {

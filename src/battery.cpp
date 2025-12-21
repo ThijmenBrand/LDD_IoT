@@ -10,6 +10,9 @@ const float REFERENCE_VOLTAGE = 3.3; // Reference voltage for ADC
 
 const int MAX_DC_VALUE = (1 << ADC_RESOLUTION) - 1; // 4095 for 12-bit ADC
 
+const float MIN_VOLTAGE = 3.2; // 0% (Cutoff safe zone)
+const float MAX_VOLTAGE = 4.2; // 100% (Fully Charged)
+
 float getBatteryVoltage()
 {
   analogReadResolution(ADC_RESOLUTION);

@@ -3,8 +3,10 @@
 
 #include <Arduino.h>
 
-void initDisplay(int currentVersion);
+void initDisplay();
 void displayMessage(String message);
+void drawLowBatteryWarning();
+void showEmptyBatteryScreen();
 void showUpdateScreen(int newVersion);
 
 #endif // DISPLAY_H

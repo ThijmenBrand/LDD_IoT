@@ -4,6 +4,7 @@
 #include "display.h"
 #include "battery.h"
 #include "api.h"
+#include <ArduinoLowPower.h>
 
 // DISPLAY SETTINGS
 const int MAX_HEIGHT = 130;
@@ -16,8 +17,21 @@ void setup()
   Serial.begin(115200);
 
   // Initialize the e-paper
-  initDisplay(CURRENT_VERSION);
-  delay(1000);
+  initDisplay();
+
+  int batteryLevel = getBatteryPercentage();
+  Serial.println("Battery Level: " + String(batteryLevel) + "%");
+  if (batteryLevel <= 5)
+  {
+    Serial.println("Battery critically low. Showing empty battery screen.");
+    showEmptyBatteryScreen();
+
+    WiFi.end();
+
+    LowPower.deepSleep(1800000);
+
+    NVIC_SystemReset();
+  }
 
   int WifiStatus = connectWifi();
   if (WifiStatus != WIFI_CONNECTED)
