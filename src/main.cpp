@@ -61,20 +61,12 @@ void setup()
   }
 
   displayMessage("Syncing...");
-  String data = fetchScreenContent(DEVICE_ID);
-  if (data.length() > 0)
-  {
-    drawScreen(data, batteryLevel, batteryLevel <= 20);
-  }
-  else
-  {
-    displayMessage("Failed to fetch\ndata!");
-  }
+  ApiResponse data = fetchScreenContent(DEVICE_ID);
+  Serial.println("Battery Level for display: " + String(batteryLevel) + "%");
+  drawScreen(data.rawData, batteryLevel, batteryLevel <= 20, data.widget);
 
   Serial.println("Update complete. Sleeping for 1 hour...");
   WiFi.end();
-  LowPower.deepSleep(UPDATE_INTERVAL_MS);
-  NVIC_SystemReset();
 }
 
 void loop()

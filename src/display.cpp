@@ -59,7 +59,7 @@ void displayMessage(String message)
   } while (display.nextPage());
 }
 
-void drawScreen(String payload, int batteryPercentage, bool isLowBattery)
+void drawScreen(String payload, int batteryPercentage, bool isLowBattery, String widget)
 {
   display.setFullWindow();
   display.firstPage();
@@ -74,7 +74,7 @@ void drawScreen(String payload, int batteryPercentage, bool isLowBattery)
     drawHeader("Agenda:", 0, 2);
     drawHeader(batStr, 3, 1);
 
-    drawCalendarItems(payload);
+    drawWidget(payload, widget);
 
     // --- 4. Draw Warnings ---
     if (isLowBattery)
@@ -82,6 +82,20 @@ void drawScreen(String payload, int batteryPercentage, bool isLowBattery)
       drawLowBatteryWarning(batteryPercentage);
     }
   } while (display.nextPage());
+}
+
+void drawWidget(String data, String widget)
+{
+  if (widget == "calendar")
+  {
+    return drawCalendarItems(data);
+  }
+
+  if (widget == "countdown")
+  {
+    return drawCountdown(data);
+  }
+  // Future widgets can be added here
 }
 
 void drawCalendarItems(String payload)
@@ -130,6 +144,15 @@ void drawCalendarItems(String payload)
     lastIndex = separatorIndex + 1;
     separatorIndex = payload.indexOf('|', lastIndex);
   }
+}
+
+void drawCountdown(String payload)
+{
+  display.setFont(&FreeMonoBold12pt7b);
+  display.setTextColor(GxEPD_BLACK);
+
+  display.setCursor(20, 40);
+  display.print(payload);
 }
 
 // The draw header function divides the header into four segments.
