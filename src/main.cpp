@@ -10,7 +10,7 @@
 const int MAX_HEIGHT = 130;
 const int MAX_WIDHT = 300;
 
-const String DEVICE_ID = "DEVICE_001";
+const String DEVICE_ID = "e74010ab-4799-462f-b4b8-942903485c41";
 const int UPDATE_INTERVAL_MS = 3600000; // 1 Hour
 
 void setup()
