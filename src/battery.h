@@ -3,5 +3,6 @@
 
 float getBatteryVoltage();
 int getBatteryPercentage();
+bool isCharging();
 
 #endif // BATTERY_H

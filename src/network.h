@@ -5,6 +5,9 @@
 #define WIFI_CONNECTED 0
 
 #include <Arduino.h>
+#include <WiFiNINA.h>
+
+extern WiFiSSLClient wifiClient;
 
 struct HttpResponse
 {

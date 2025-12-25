@@ -3,6 +3,12 @@
 
 #include <Arduino.h>
 
-String fetchScreenContent(String deviceId);
+struct ApiResponse
+{
+  String widget;
+  String rawData;
+};
+
+ApiResponse fetchScreenContent(String deviceId);
 
 #endif
