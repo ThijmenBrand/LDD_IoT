@@ -58,11 +58,16 @@ void setup()
     }
   }
 
-  if (batteryLevel < 100)
+  if (batteryLevel < 20 && !isCharging())
   {
     displayMessage("Charge battery" + String(batteryLevel) + "%", true);
-    delay(3000);
   }
+  else
+  {
+    displayMessage("Battery: " + String(batteryLevel) + "%", true);
+  }
+
+  delay(3000);
 
   displayMessage("Syncing...", 100, 50);
 
