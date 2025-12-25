@@ -16,8 +16,6 @@ const int UPDATE_INTERVAL_MS = 3600000; // 1 Hour
 void setup()
 {
   Serial.begin(115200);
-
-  // Initialize the e-paper
   initDisplay();
 
   int batteryLevel = getBatteryPercentage();
@@ -60,13 +58,22 @@ void setup()
     }
   }
 
-  displayMessage("Syncing...");
+  if (batteryLevel < 100)
+  {
+    displayMessage("Charge battery" + String(batteryLevel) + "%", true);
+    delay(3000);
+  }
+
+  displayMessage("Syncing...", 100, 50);
+
   ApiResponse data = fetchScreenContent(DEVICE_ID);
   Serial.println("Battery Level for display: " + String(batteryLevel) + "%");
   drawScreen(data.rawData, batteryLevel, batteryLevel <= 20, data.widget);
 
   Serial.println("Update complete. Sleeping for 1 hour...");
   WiFi.end();
+  LowPower.deepSleep(UPDATE_INTERVAL_MS);
+  NVIC_SystemReset();
 }
 
 void loop()
