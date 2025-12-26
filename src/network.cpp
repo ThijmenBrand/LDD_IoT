@@ -27,7 +27,11 @@ HttpResponse httpsGet(const char *host, String path)
   Serial.println(path);
 
   HttpClient client = HttpClient(wifiClient, host, 443);
+  client.beginRequest();
   client.get(path);
+  client.sendHeader("X-NYUSZI-SECRET", DEVICE_SECRET);
+  client.beginBody();
+  client.endRequest();
 
   int statusCode = client.responseStatusCode();
   if (statusCode != 200)

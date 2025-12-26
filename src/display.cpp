@@ -6,6 +6,10 @@
 #include <Fonts/FreeMonoBold9pt7b.h>
 #include <ArduinoJson.h>
 
+#include "widgets/countdown.h"
+#include "widgets/calendar.h"
+#include "widgets/error.h"
+
 const int EINK_BUSY = 7;
 const int EINK_RST = 6;
 const int EINK_DC = 5;
@@ -19,6 +23,24 @@ void initDisplay()
   display.setRotation(1);
   display.setFont(&FreeMono9pt7b);
   display.setTextColor(GxEPD_BLACK);
+}
+
+void drawScreen(String payload, int batteryPercentage, bool isLowBattery, String widget)
+{
+  display.setFullWindow();
+  display.firstPage();
+  do
+  {
+    display.fillScreen(GxEPD_WHITE);
+
+    drawWidget(payload, widget);
+
+    // --- 4. Draw Warnings ---
+    if (isLowBattery)
+    {
+      drawLowBatteryWarning(batteryPercentage);
+    }
+  } while (display.nextPage());
 }
 
 void drawLowBatteryWarning(int batteryPercentage)
@@ -73,165 +95,19 @@ void displayMessage(String message, bool centered)
   displayMessage(message, x, y);
 }
 
-void drawScreen(String payload, int batteryPercentage, bool isLowBattery, String widget)
-{
-  display.setFullWindow();
-  display.firstPage();
-  do
-  {
-    display.fillScreen(GxEPD_WHITE);
-
-    display.setFont(&FreeMono9pt7b);
-    display.setTextColor(GxEPD_BLACK);
-
-    String batStr = String(batteryPercentage) + "%";
-    drawHeader(batStr, 3, 1);
-
-    drawWidget(payload, widget);
-
-    // --- 4. Draw Warnings ---
-    if (isLowBattery)
-    {
-      drawLowBatteryWarning(batteryPercentage);
-    }
-  } while (display.nextPage());
-}
-
 void drawWidget(String data, String widget)
 {
   if (widget == "calendar")
   {
-    return drawCalendar(data);
+    return drawCalendar(data, display);
   }
 
   if (widget == "countdown")
   {
-    return drawCountdown(data);
-  }
-  // Future widgets can be added here
-}
-
-void drawCalendar(String payload)
-{
-  JsonDocument doc;
-  deserializeJson(doc, payload);
-
-  JsonObject highlight = doc["highlight"];
-  JsonArray upcoming = doc["upcoming"].as<JsonArray>();
-
-  display.fillScreen(GxEPD_WHITE);
-
-  // ============================================
-  // LEFT SIDE: HIGHLIGHT (Inverted: Black BG, White Text)
-  // ============================================
-  int splitX = 150;
-
-  // Draw the Box
-  display.fillRect(0, 0, splitX, 128, GxEPD_BLACK);
-  display.setTextColor(GxEPD_WHITE); // Invert text color
-
-  String type = highlight["type"].as<String>();
-
-  if (type == "event")
-  {
-    display.setFont(&FreeMono9pt7b);
-    display.setCursor(5, 20);
-    display.print(highlight["time"].as<String>());
-
-    display.setFont(&FreeMonoBold12pt7b);
-    display.setCursor(5, 55);
-
-    // Word Wrap Title
-    String title = highlight["title"].as<String>();
-    int spaceIndex = title.indexOf(' ');
-    if (spaceIndex > 0 && title.length() > 8)
-    {
-      display.print(title.substring(0, spaceIndex));
-      display.setCursor(5, 80);
-      display.print(title.substring(spaceIndex + 1));
-    }
-    else
-    {
-      display.print(title);
-    }
-  }
-  else
-  {
-    // --- DRAW "NO EVENTS" STATE ---
-    // A nice big checkmark or smiley could go here
-    display.setFont(&FreeMonoBold12pt7b);
-    display.setCursor(5, 50);
-    display.print("No Events");
-
-    display.setFont(&FreeMono9pt7b);
-    display.setCursor(5, 80);
-    display.print("Today");
+    return drawCountdown(data, display);
   }
 
-  // ============================================
-  // RIGHT SIDE: UPCOMING LIST (Normal: White BG, Black Text)
-  // ============================================
-  display.setTextColor(GxEPD_BLACK);
-  int listX = splitX + 10; // Padding
-  int y = 30;
-
-  for (JsonVariant v : upcoming)
-  {
-    // Date/Time (Bold/Small)
-    display.setFont(&FreeMonoBold9pt7b);
-    display.setCursor(listX, y);
-    display.print(v["time"].as<String>());
-
-    // Title (Normal/Small)
-    y += 18; // Line spacing
-    display.setFont(&FreeMono9pt7b);
-    display.setCursor(listX, y);
-    display.print(v["title"].as<String>());
-
-    y += 25; // Gap to next item
-  }
-}
-
-void drawCountdown(String jsonObjectPayload)
-{
-  JsonDocument doc;
-  deserializeJson(doc, jsonObjectPayload);
-
-  String daysLeft = doc["daysLeft"].as<String>();
-  String dateString = doc["dateString"].as<String>();
-  String label = doc["label"].as<String>();
-  int progress = doc["progress"].as<int>();
-
-  display.fillScreen(GxEPD_WHITE);
-
-  display.setFont(&FreeMonoBold24pt7b);
-  display.setTextColor(GxEPD_BLACK);
-
-  int16_t tbx, tby;
-  uint16_t tbw, tbh;
-  display.getTextBounds(daysLeft, 0, 0, &tbx, &tby, &tbw, &tbh);
-
-  int x = (296 - tbw) / 2;
-  display.setCursor(x, 50);
-  display.print(daysLeft);
-
-  display.setFont(&FreeMonoBold12pt7b);
-  display.getTextBounds(label, 0, 0, &tbx, &tby, &tbw, &tbh);
-  x = (296 - tbw) / 2;
-  display.setCursor(x, 80);
-  display.print(label);
-
-  display.setFont(&FreeMono9pt7b);
-  display.setCursor(10, 105);
-  display.print(dateString);
-
-  display.drawRect(10, 110, 276, 15, GxEPD_BLACK);
-
-  int fillWidth = map(progress, 0, 100, 0, 272); // 276 width - 4px padding
-  if (fillWidth > 0)
-  {
-    display.fillRect(12, 112, fillWidth, 11, GxEPD_BLACK);
-  }
+  return drawErrorScreen("Error, but I love you nyuszi :)", display);
 }
 
 // The draw header function divides the header into four segments.
@@ -283,6 +159,11 @@ void drawFooter(String footer, int startSegment, int segmentSpan)
 
   display.setCursor(x, y);
   display.print(footer);
+}
+
+void drawBitmap(const unsigned char *bitmap, int x, int y, int w, int h)
+{
+  display.drawBitmap(x, y, bitmap, w, h, GxEPD_BLACK);
 }
 
 void getCenteredPosition(String text, int &x, int &y)
