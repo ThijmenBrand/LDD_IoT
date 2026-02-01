@@ -29,7 +29,7 @@ void setup()
 
     WiFi.end();
 
-    LowPower.deepSleep(1800000);
+    LowPower.deepSleep(UPDATE_INTERVAL_MS);
 
     NVIC_SystemReset();
   }
@@ -38,8 +38,7 @@ void setup()
   if (WifiStatus != WIFI_CONNECTED)
   {
     displayMessage("WiFi Connection\nFailed!");
-    while (1)
-      ;
+    while (1);
   }
 
   int updateStatus = checkFirmwareUpdate();
