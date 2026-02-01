@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include "network.h"
+#include "../lib/secrets.h"
 #include "firmware.h"
 #include "display.h"
 #include "battery.h"
@@ -10,13 +11,14 @@
 const int MAX_HEIGHT = 130;
 const int MAX_WIDHT = 300;
 
-const String DEVICE_ID = "e74010ab-4799-462f-b4b8-942903485c41";
 const int UPDATE_INTERVAL_MS = 3600000; // 1 Hour
 
 void setup()
 {
   Serial.begin(115200);
   initDisplay();
+
+  delay(3000); // Allow time for serial monitor to connect
 
   int batteryLevel = getBatteryPercentage();
   Serial.println("Battery Level: " + String(batteryLevel) + "%");
@@ -27,7 +29,7 @@ void setup()
 
     WiFi.end();
 
-    LowPower.deepSleep(1800000);
+    LowPower.deepSleep(UPDATE_INTERVAL_MS);
 
     NVIC_SystemReset();
   }
@@ -36,8 +38,7 @@ void setup()
   if (WifiStatus != WIFI_CONNECTED)
   {
     displayMessage("WiFi Connection\nFailed!");
-    while (1)
-      ;
+    while (1);
   }
 
   int updateStatus = checkFirmwareUpdate();
@@ -58,11 +59,16 @@ void setup()
     }
   }
 
-  if (batteryLevel < 100)
+  if (batteryLevel < 20 && !isCharging())
   {
     displayMessage("Charge battery" + String(batteryLevel) + "%", true);
-    delay(3000);
   }
+  else
+  {
+    displayMessage("Battery: " + String(batteryLevel) + "%", true);
+  }
+
+  delay(3000);
 
   displayMessage("Syncing...", 100, 50);
 

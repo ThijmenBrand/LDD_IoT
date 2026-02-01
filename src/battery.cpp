@@ -1,41 +1,53 @@
 #include "battery.h"
 #include <Arduino.h>
 
-// CONFIGURATION FOR MKR WIFI 1010
-// The board has an internal voltage divider connected to ADC_BATTERY
-// R1 = 330k, R2 = 1.2M
-// Factor = (R1 + R2) / R2 = (330 + 1200) / 1200 = 1.275
-const float VOLTAGE_DIVIDER_RATIO = 1.275;
+const float ADC_MAX_VALUE = (float)(1 << ADC_RESOLUTION);
+
 const float REFERENCE_VOLTAGE = 3.3;          // Reference voltage for ADC
 const float CHARGING_THRESHOLD_VOLTAGE = 4.1; // Voltage above which the battery is considered charging
 
-const int MAX_DC_VALUE = (1 << ADC_RESOLUTION) - 1; // 4095 for 12-bit ADC
+// Start with 1.275 if utilizing the default MKR divider (1.2M/330k)
+// You can tweak this later if the voltage is slightly off.
+const float CALIBRATION_FACTOR = 1.3;
 
 const float MIN_VOLTAGE = 3.2; // 0% (Cutoff safe zone)
-const float MAX_VOLTAGE = 4.2; // 100% (Fully Charged)
+const int SMOOTHING_SAMPLES = 10;
 
 float getBatteryVoltage()
 {
+  // 1. Configure the ADC hardware to use 12 bits
   analogReadResolution(ADC_RESOLUTION);
-  int rawADC = analogRead(ADC_BATTERY);
 
-  float volgateAtPin = rawADC * (REFERENCE_VOLTAGE / MAX_DC_VALUE);
-  float batteryVoltage = volgateAtPin * VOLTAGE_DIVIDER_RATIO;
+  long rawSum = 0;
+  for (int i = 0; i < SMOOTHING_SAMPLES; i++)
+  {
+    rawSum += analogRead(ADC_BATTERY);
+    delay(2);
+  }
+  int raw = rawSum / SMOOTHING_SAMPLES;
 
-  return batteryVoltage;
+  float voltage = raw * (REFERENCE_VOLTAGE / ADC_MAX_VALUE) * CALIBRATION_FACTOR;
+
+  Serial.print("Raw ADC: ");
+  Serial.print(raw);
+  Serial.print(" | Calc Voltage: ");
+  Serial.println(voltage);
+
+  return voltage;
 }
 
 int getBatteryPercentage()
 {
   float voltage = getBatteryVoltage();
 
-  int percentage = (int)((voltage - MIN_VOLTAGE) / (MAX_VOLTAGE - MIN_VOLTAGE) * 100);
+  int percentage = (int)((voltage - MIN_VOLTAGE) * 100);
 
   // Clamp 0-100
   if (percentage > 100)
     percentage = 100;
   if (percentage < 0)
     percentage = 0;
+
   return percentage;
 }
 
