@@ -6,12 +6,16 @@
 #include "battery.h"
 #include "api.h"
 #include <ArduinoLowPower.h>
-
-// DISPLAY SETTINGS
-const int MAX_HEIGHT = 130;
-const int MAX_WIDHT = 300;
+#include "images/images.h"
 
 const int UPDATE_INTERVAL_MS = 3600000; // 1 Hour
+
+void enableDeepSleep()
+{
+  WiFi.end();
+  LowPower.deepSleep(UPDATE_INTERVAL_MS);
+  NVIC_SystemReset();
+}
 
 void setup()
 {
@@ -27,18 +31,15 @@ void setup()
     Serial.println("Battery critically low. Showing empty battery screen.");
     showEmptyBatteryScreen();
 
-    WiFi.end();
-
-    LowPower.deepSleep(UPDATE_INTERVAL_MS);
-
-    NVIC_SystemReset();
+    enableDeepSleep();
   }
 
   int WifiStatus = connectWifi();
   if (WifiStatus != WIFI_CONNECTED)
   {
-    displayMessage("WiFi Connection\nFailed!");
-    while (1);
+    displayMessage("WiFi Error!", true);
+
+    enableDeepSleep();
   }
 
   int updateStatus = checkFirmwareUpdate();
@@ -75,11 +76,8 @@ void setup()
   ApiResponse data = fetchScreenContent(DEVICE_ID);
   Serial.println("Battery Level for display: " + String(batteryLevel) + "%");
   drawScreen(data.rawData, batteryLevel, batteryLevel <= 20, data.widget);
-
   Serial.println("Update complete. Sleeping for 1 hour...");
-  WiFi.end();
-  LowPower.deepSleep(UPDATE_INTERVAL_MS);
-  NVIC_SystemReset();
+  enableDeepSleep();
 }
 
 void loop()

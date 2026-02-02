@@ -1,4 +1,5 @@
 #include "display.h"
+
 #include <GxEPD2_BW.h>
 #include <Fonts/FreeMono9pt7b.h>
 #include <Fonts/FreeMonoBold12pt7b.h>
@@ -9,6 +10,8 @@
 #include "widgets/countdown.h"
 #include "widgets/calendar.h"
 #include "widgets/error.h"
+
+#include "images/images.h"
 
 const int EINK_BUSY = 7;
 const int EINK_RST = 6;
@@ -107,7 +110,7 @@ void drawWidget(String data, String widget)
     return drawCountdown(data, display);
   }
 
-  return drawErrorScreen("Error, but I love you nyuszi :)", display);
+  return drawErrorScreen("Something went wrong!", display);
 }
 
 // The draw header function divides the header into four segments.
@@ -161,9 +164,19 @@ void drawFooter(String footer, int startSegment, int segmentSpan)
   display.print(footer);
 }
 
+void drawError(String errorMessage)
+{
+  drawBitmap(nyuszi_logo, 30, 0, 235, 128); // Draw nyuszi logo at top right corner
+}
+
 void drawBitmap(const unsigned char *bitmap, int x, int y, int w, int h)
 {
-  display.drawBitmap(x, y, bitmap, w, h, GxEPD_BLACK);
+  display.setFullWindow();
+  display.firstPage();
+  do
+  {
+    display.drawBitmap(x, y, bitmap, w, h, GxEPD_BLACK);
+  } while (display.nextPage());
 }
 
 void getCenteredPosition(String text, int &x, int &y)

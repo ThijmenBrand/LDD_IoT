@@ -1,5 +1,4 @@
-#ifndef DISPLAY_H
-#define DISPLAY_H
+#pragma once
 
 #include <Arduino.h>
 
@@ -12,7 +11,6 @@ void drawScreen(String payload, int batteryPercentage, bool isLowBattery, String
 void drawWidget(String data, String widget);
 void drawHeader(String header, int startSegment, int segmentSpan);
 void drawFooter(String footer, int startSegment, int segmentSpan);
+void drawError(String errorMessage);
 void drawBitmap(const unsigned char *bitmap, int x, int y, int w, int h);
 void getCenteredPosition(String text, int &x, int &y);
-
-#endif // DISPLAY_H

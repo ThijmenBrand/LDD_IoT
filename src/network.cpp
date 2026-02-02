@@ -4,20 +4,39 @@
 
 WiFiSSLClient wifiClient;
 
+const int WIFI_TIMEOUT_MS = 20000;
+
 int connectWifi()
 {
   if (WiFi.status() == WL_CONNECTED)
     return WIFI_CONNECTED;
 
-  Serial.print("Connecting to WiFi");
-  while (WiFi.status() != WL_CONNECTED)
+  Serial.println("Connecting to WiFi...");
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+
+  const unsigned long timeoutMs = 20000; // 20 seconds
+  unsigned long start = millis();
+
+  while (WiFi.status() != WL_CONNECTED && (millis() - start) < timeoutMs)
   {
-    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-    delay(1000);
+    delay(500);
     Serial.print(".");
   }
-  Serial.println("\nConnected!");
-  return WIFI_CONNECTED;
+
+  if (WiFi.status() == WL_CONNECTED)
+  {
+    Serial.println("");
+    Serial.println("WiFi connected.");
+    Serial.print("IP address: ");
+    Serial.println(WiFi.localIP());
+    return WIFI_CONNECTED;
+  }
+  else
+  {
+    Serial.println("");
+    Serial.println("WiFi connection failed.");
+    return WIFI_ERROR;
+  }
 }
 
 HttpResponse httpsGet(const char *host, String path)
